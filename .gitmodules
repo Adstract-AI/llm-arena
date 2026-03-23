@@ -1,0 +1,6 @@
+[submodule "llm-arena-backend"]
+	path = llm-arena-backend
+	url = https://github.com/Adstract-AI/llm-arena-backend
+[submodule "llm-arena-frontend"]
+	path = llm-arena-frontend
+	url = https://github.com/Adstract-AI/llm-arena-frontend.git

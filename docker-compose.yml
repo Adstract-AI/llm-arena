@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - ./llm-arena-backend/.env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-llm_arena} -d ${POSTGRES_DB:-llm_arena}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./llm-arena-backend
+    env_file:
+      - ./llm-arena-backend/.env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./llm-arena-backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./llm-arena-frontend
+    env_file:
+      - ./llm-arena-frontend/.env
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./llm-arena-frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
