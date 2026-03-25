@@ -4,7 +4,7 @@ services:
     env_file:
       - ./llm-arena-backend/.env
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -16,15 +16,17 @@ services:
   backend:
     build:
       context: ./llm-arena-backend
+      dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-backend/.env
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      AUTO_START_SETUP: ${AUTO_START_SETUP}
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      PORT: ${BACKEND_PORT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     ports:
-      - "8000:8000"
-    volumes:
-      - ./llm-arena-backend:/app
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -32,20 +34,14 @@ services:
   frontend:
     build:
       context: ./llm-arena-frontend
-    env_file:
-      - ./llm-arena-frontend/.env
-    command: npm run dev -- --host 0.0.0.0 --port 5173
+      dockerfile: Dockerfile.deployment
     environment:
-      CHOKIDAR_USEPOLLING: "true"
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     ports:
-      - "5173:5173"
-    volumes:
-      - ./llm-arena-frontend:/app
-      - frontend_node_modules:/app/node_modules
+      - "${FRONTEND_PORT}:80"
     depends_on:
       backend:
         condition: service_started
 
 volumes:
   postgres_data:
-  frontend_node_modules:
