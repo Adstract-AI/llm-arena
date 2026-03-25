@@ -9,6 +9,19 @@ The project also includes a direct chat mode where users can choose a Vezilka mo
 
 The project is focused on evaluating Macedonian fine-tuned LLMs alongside broader global providers.
 
+## Clone With Submodules
+To clone the full repository together with its submodules, use:
+
+```bash
+git clone --recurse-submodules <repository-url>
+```
+
+If you already cloned the repository without submodules, run:
+
+```bash
+git submodule update --init --recursive
+```
+
 ## Setup Overview
 This root folder is the combined workspace for the full LLM Arena stack.
 
