@@ -1,6 +1,15 @@
+; ; For Github repository:
+; [submodule "llm-arena-backend"]
+; 	path = llm-arena-backend
+; 	url = https://github.com/Adstract-AI/llm-arena-backend.git
+; [submodule "llm-arena-frontend"]
+; 	path = llm-arena-frontend
+; 	url = https://github.com/Adstract-AI/llm-arena-frontend.git
+
+; For Gitlab repository:
 [submodule "llm-arena-backend"]
 	path = llm-arena-backend
-	url = https://github.com/Adstract-AI/llm-arena-backend.git
+	url = https://gitlab.finki.ukim.mk/vezilka/llm-arena/llm-arena-backend.git
 [submodule "llm-arena-frontend"]
 	path = llm-arena-frontend
-	url = https://github.com/Adstract-AI/llm-arena-frontend.git
+	url = https://gitlab.finki.ukim.mk/vezilka/llm-arena/llm-arena-frontend.git
