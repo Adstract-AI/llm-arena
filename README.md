@@ -67,6 +67,42 @@ When you run the root Docker Compose setup, the backend startup flow also seeds 
 
 After the first cold start, you can disable this automatic setup behavior by setting `AUTO_START_SETUP=false`.
 
+## Setup Commands
+The backend also includes two useful setup commands for local preparation and reset flows.
+
+`setup_project`
+- prepares the backend for normal use
+- seeds the required base data
+- creates the default admin user when needed
+
+Example:
+
+```bash
+cd llm-arena-backend
+conda run -n adstract-backend python manage.py setup_project --full-auto
+```
+
+`hardreset`
+- recreates the working backend database state for a fresh start
+- is useful during heavy schema changes or when you want a clean seeded environment again
+- runs the setup flow again after resetting
+
+Example:
+
+```bash
+cd llm-arena-backend
+conda run -n adstract-backend python manage.py hardreset
+```
+
+`AUTO_START_SETUP`
+- controls whether the backend container automatically runs setup on startup
+- when `AUTO_START_SETUP=true`, container startup runs the setup logic automatically
+- when `AUTO_START_SETUP=false`, the backend starts without auto-running setup and you can run `setup_project` or `hardreset` manually
+
+Typical usage:
+- first local Docker boot: leave `AUTO_START_SETUP=true`
+- later boots on an already prepared environment: set `AUTO_START_SETUP=false`
+
 ## When To Use This Root Setup
 Use the root setup when you want the whole product running together.
 
