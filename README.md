@@ -56,11 +56,21 @@ The backend uses the deployment-style Dockerfile from `llm-arena-backend`, and t
 
 Use `.env.example` as the template reference for the root compose overrides.
 
+If you want to run the same stack from already-pushed Docker images instead of building locally, use [docker-compose.images.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.images.yml). It pulls:
+- `itonkdong/llm-arena-backend:latest`
+- `itonkdong/llm-arena-frontend:latest`
+
 ## Running The Full Stack
 From this root folder:
 
 ```bash
 docker compose up --build
+```
+
+To run the full stack from the pushed images:
+
+```bash
+docker compose -f docker-compose.images.yml up
 ```
 
 When you run the root Docker Compose setup, the backend startup flow also seeds the database with the required initial data and creates a default Django superuser with username `admin` and password `admin`.
