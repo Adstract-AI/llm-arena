@@ -45,7 +45,7 @@ The root setup is useful when you want one command that starts:
 Each app folder also has its own Docker files, app-specific compose file, and README for working on that part in isolation.
 
 ## Root Docker Compose
-The root [docker-compose.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.yml) is the combined stack.
+The root [docker-compose.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.yml) is the local-build combined stack.
 
 It starts:
 - frontend on `http://localhost:5173`
@@ -56,9 +56,22 @@ The backend uses the deployment-style Dockerfile from `llm-arena-backend`, and t
 
 Use `.env.example` as the template reference for the root compose overrides.
 
-If you want to run the same stack from already-pushed Docker images instead of building locally, use [docker-compose.images.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.images.yml). It pulls:
+If you want to run the stack from already-pushed Docker images instead of building locally, use [docker-compose.images.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.images.yml). It pulls:
 - `itonkdong/llm-arena-backend:latest`
 - `itonkdong/llm-arena-frontend:latest`
+
+The image-based compose file also includes Nginx as the only public entrypoint. It exposes `80:80` and routes:
+- `/` to the frontend container
+- `/api/` to the backend container
+- `/admin/` to the backend container
+- `/static/` and `/media/` to the backend container
+
+In [docker-compose.images.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/docker-compose.images.yml), frontend, backend, and Postgres are internal only, and the frontend is configured with `VITE_API_BASE_URL=/api`.
+
+When deploying on a VM or domain, make sure the backend environment allows the public host:
+- add the VM IP or domain to `DJANGO_ALLOWED_HOSTS`
+- add the public HTTP/HTTPS origin to `CSRF_TRUSTED_ORIGINS`
+- update OAuth redirect URIs to use the public domain instead of localhost
 
 ## Running The Full Stack
 From this root folder:
@@ -67,10 +80,22 @@ From this root folder:
 docker compose up --build
 ```
 
+Then open:
+
+```text
+http://localhost:5173
+```
+
 To run the full stack from the pushed images:
 
 ```bash
 docker compose -f docker-compose.images.yml up
+```
+
+Then open:
+
+```text
+http://localhost
 ```
 
 When you run the root Docker Compose setup, the backend startup flow also seeds the database with the required initial data and creates a default Django superuser with username `admin` and password `admin`.
