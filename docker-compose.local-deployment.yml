@@ -14,8 +14,9 @@ services:
       retries: 10
 
   backend:
-    image: itonkdong/llm-arena-backend:latest
-    pull_policy: always
+    build:
+      context: ./llm-arena-backend
+      dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-backend/.env
     environment:
@@ -30,8 +31,9 @@ services:
         condition: service_healthy
 
   frontend:
-    image: itonkdong/llm-arena-frontend:latest
-    pull_policy: always
+    build:
+      context: ./llm-arena-frontend
+      dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-frontend/.env
     environment:

@@ -3,8 +3,8 @@ services:
     image: postgres:16-alpine
     env_file:
       - ./llm-arena-backend/.env
-    expose:
-      - "5432"
+    ports:
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -14,8 +14,9 @@ services:
       retries: 10
 
   backend:
-    image: itonkdong/llm-arena-backend:latest
-    pull_policy: always
+    build:
+      context: ./llm-arena-backend
+      dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-backend/.env
     environment:
@@ -23,36 +24,21 @@ services:
       DJANGO_DEBUG: ${DJANGO_DEBUG}
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_PORT: ${POSTGRES_PORT}
-    expose:
-      - "8000"
+    ports:
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
 
   frontend:
-    image: itonkdong/llm-arena-frontend:latest
-    pull_policy: always
+    build:
+      context: ./llm-arena-frontend
+      dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-frontend/.env
-    environment:
-      VITE_API_BASE_URL: /api
-    expose:
-      - "80"
-    depends_on:
-      backend:
-        condition: service_started
-
-  nginx:
-    image: nginx:1.27-alpine
     ports:
-      - "80:80"
-      # Enable this when TLS certificates and a 443 server block are added.
-      # - "443:443"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - "${FRONTEND_PORT}:80"
     depends_on:
-      frontend:
-        condition: service_started
       backend:
         condition: service_started
 
