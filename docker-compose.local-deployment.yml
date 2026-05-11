@@ -36,8 +36,6 @@ services:
       dockerfile: Dockerfile.deployment
     env_file:
       - ./llm-arena-frontend/.env
-    environment:
-      VITE_API_BASE_URL: /api
     expose:
       - "80"
     depends_on:
