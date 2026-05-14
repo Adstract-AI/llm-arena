@@ -153,6 +153,47 @@ Typical usage:
 - first local Docker boot: leave `AUTO_START_SETUP=true`
 - later boots on an already prepared environment: set `AUTO_START_SETUP=false`
 
+## GitLab CI/CD
+The root [.gitlab-ci.yml](/Users/itonkdong/Work/Fax/INSOK/llm-arena/.gitlab-ci.yml) builds Docker images with Kaniko.
+
+Merge requests targeting `main`:
+- build the backend deployment image
+- build the frontend deployment image
+- do not push images
+- do not deploy
+
+Merges or pushes to `main`:
+- build and push `itonkdong/llm-arena-backend:latest`
+- build and push `itonkdong/llm-arena-backend:$CI_COMMIT_SHORT_SHA`
+- build and push `itonkdong/llm-arena-frontend:latest`
+- build and push `itonkdong/llm-arena-frontend:$CI_COMMIT_SHORT_SHA`
+- deploy the VM over SSH
+
+Required GitLab CI/CD variables:
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `VM_HOST`
+- `VM_USER`
+- `VM_SSH_PRIVATE_KEY`
+- `VM_SSH_KEY_PASSPHRASE`, required only when the SSH private key has a passphrase
+- `VM_DEPLOY_PATH`
+- `VM_SSH_PORT`, optional, defaults to `22`
+
+The VM should already have Docker Compose installed and should contain the deployment files at `VM_DEPLOY_PATH`:
+- `docker-compose.yml`
+- `nginx/default.conf`
+- `llm-arena-backend/.env`
+- `llm-arena-frontend/.env`
+- root `.env`
+
+The deploy job runs:
+
+```bash
+docker compose pull backend frontend
+docker compose up -d --remove-orphans
+docker image prune -f
+```
+
 ## When To Use This Root Setup
 Use the root setup when you want the whole product running together.
 
