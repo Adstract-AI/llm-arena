@@ -27,35 +27,35 @@ variables:
 build_backend:
   extends: .kaniko_build
   script:
-    - >
+    - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        /kaniko/executor
-        --context "$CI_PROJECT_DIR/llm-arena-backend"
-        --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment"
-        --destination "$BACKEND_IMAGE:latest"
-        --destination "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA";
+        /kaniko/executor \
+          --context "$CI_PROJECT_DIR/llm-arena-backend" \
+          --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment" \
+          --destination "$BACKEND_IMAGE:latest" \
+          --destination "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
       else
-        /kaniko/executor
-        --context "$CI_PROJECT_DIR/llm-arena-backend"
-        --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment"
-        --no-push;
+        /kaniko/executor \
+          --context "$CI_PROJECT_DIR/llm-arena-backend" \
+          --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment" \
+          --no-push
       fi
 
 build_frontend:
   extends: .kaniko_build
   script:
-    - >
+    - |
       if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        /kaniko/executor
-        --context "$CI_PROJECT_DIR/llm-arena-frontend"
-        --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment"
-        --destination "$FRONTEND_IMAGE:latest"
-        --destination "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA";
+        /kaniko/executor \
+          --context "$CI_PROJECT_DIR/llm-arena-frontend" \
+          --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment" \
+          --destination "$FRONTEND_IMAGE:latest" \
+          --destination "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
       else
-        /kaniko/executor
-        --context "$CI_PROJECT_DIR/llm-arena-frontend"
-        --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment"
-        --no-push;
+        /kaniko/executor \
+          --context "$CI_PROJECT_DIR/llm-arena-frontend" \
+          --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment" \
+          --no-push
       fi
 
 deploy_vm:
