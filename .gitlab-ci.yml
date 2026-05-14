@@ -65,19 +65,24 @@ deploy_vm:
     - build_backend
     - build_frontend
   before_script:
-    - apk add --no-cache openssh-client
+    - apk add --no-cache coreutils openssh-client
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - printf '%s\n' "$VM_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+    - |
+      if [ -f "$VM_SSH_PRIVATE_KEY" ]; then
+        cp "$VM_SSH_PRIVATE_KEY" ~/.ssh/id_ed25519
+      else
+        printf '%s\n' "$VM_SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' | tr -d '\r' > ~/.ssh/id_ed25519
+      fi
     - chmod 600 ~/.ssh/id_ed25519
     - eval "$(ssh-agent -s)"
-    - >
+    - |
       if [ -n "$VM_SSH_KEY_PASSPHRASE" ]; then
         printf '#!/bin/sh\nprintf "%%s\\n" "$VM_SSH_KEY_PASSPHRASE"\n' > ~/.ssh/askpass.sh;
         chmod 700 ~/.ssh/askpass.sh;
-        DISPLAY=:0 SSH_ASKPASS="$HOME/.ssh/askpass.sh" SSH_ASKPASS_REQUIRE=force ssh-add ~/.ssh/id_ed25519 < /dev/null;
+        DISPLAY=:0 SSH_ASKPASS="$HOME/.ssh/askpass.sh" SSH_ASKPASS_REQUIRE=force timeout 30s ssh-add ~/.ssh/id_ed25519 < /dev/null;
       else
-        ssh-add ~/.ssh/id_ed25519;
+        timeout 30s ssh-add ~/.ssh/id_ed25519;
       fi
     - ssh-keyscan -p "$VM_SSH_PORT" "$VM_HOST" >> ~/.ssh/known_hosts
   script:
