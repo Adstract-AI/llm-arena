@@ -21,42 +21,29 @@ variables:
         printf '{"auths":{"https://index.docker.io/v1/":{"username":"%s","password":"%s"}}}' "$DOCKERHUB_USERNAME" "$DOCKERHUB_TOKEN" > /kaniko/.docker/config.json
       fi
   rules:
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
 
 build_backend:
   extends: .kaniko_build
   script:
     - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        /kaniko/executor \
-          --context "$CI_PROJECT_DIR/llm-arena-backend" \
-          --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment" \
-          --destination "$BACKEND_IMAGE:latest" \
-          --destination "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-      else
-        /kaniko/executor \
-          --context "$CI_PROJECT_DIR/llm-arena-backend" \
-          --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment" \
-          --no-push
-      fi
+      /kaniko/executor \
+        --context "$CI_PROJECT_DIR/llm-arena-backend" \
+        --dockerfile "$CI_PROJECT_DIR/llm-arena-backend/Dockerfile.deployment" \
+        --destination "$BACKEND_IMAGE:latest" \
+        --destination "$BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        --destination "$BACKEND_IMAGE:mr-$CI_MERGE_REQUEST_IID"
 
 build_frontend:
   extends: .kaniko_build
   script:
     - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        /kaniko/executor \
-          --context "$CI_PROJECT_DIR/llm-arena-frontend" \
-          --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment" \
-          --destination "$FRONTEND_IMAGE:latest" \
-          --destination "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA"
-      else
-        /kaniko/executor \
-          --context "$CI_PROJECT_DIR/llm-arena-frontend" \
-          --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment" \
-          --no-push
-      fi
+      /kaniko/executor \
+        --context "$CI_PROJECT_DIR/llm-arena-frontend" \
+        --dockerfile "$CI_PROJECT_DIR/llm-arena-frontend/Dockerfile.deployment" \
+        --destination "$FRONTEND_IMAGE:latest" \
+        --destination "$FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA" \
+        --destination "$FRONTEND_IMAGE:mr-$CI_MERGE_REQUEST_IID"
 
 deploy_vm:
   stage: deploy
@@ -65,7 +52,7 @@ deploy_vm:
     - build_backend
     - build_frontend
   before_script:
-    - apk add --no-cache coreutils openssh-client util-linux
+    - apk add --no-cache coreutils expect openssh-client
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - |
@@ -78,9 +65,22 @@ deploy_vm:
     - eval "$(ssh-agent -s)"
     - |
       if [ -n "$VM_SSH_KEY_PASSPHRASE" ]; then
-        printf '#!/bin/sh\nprintf "%%s\\n" "$VM_SSH_KEY_PASSPHRASE"\n' > ~/.ssh/askpass.sh;
-        chmod 700 ~/.ssh/askpass.sh;
-        timeout 30s setsid -w env DISPLAY=:0 SSH_ASKPASS="$HOME/.ssh/askpass.sh" SSH_ASKPASS_REQUIRE=force ssh-add ~/.ssh/id_ed25519 < /dev/null;
+        timeout 30s expect -c '
+          set timeout 25
+          spawn ssh-add ~/.ssh/id_ed25519
+          expect {
+            -re "Enter passphrase.*:" {
+              send -- "$env(VM_SSH_KEY_PASSPHRASE)\r"
+              exp_continue
+            }
+            -re "Identity added" { exit 0 }
+            eof {
+              catch wait result
+              exit [lindex $result 3]
+            }
+            timeout { exit 124 }
+          }
+        '
       else
         timeout 30s ssh-add ~/.ssh/id_ed25519;
       fi
@@ -93,4 +93,4 @@ deploy_vm:
       docker compose up -d --remove-orphans &&
       docker image prune -f"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
