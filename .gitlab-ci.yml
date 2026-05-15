@@ -67,7 +67,7 @@ deploy_vm:
       if [ -n "$VM_SSH_KEY_PASSPHRASE" ]; then
         timeout 30s expect -c '
           set timeout 25
-          spawn ssh-add ~/.ssh/id_ed25519
+          spawn ssh-add $env(HOME)/.ssh/id_ed25519
           expect {
             -re "Enter passphrase.*:" {
               send -- "$env(VM_SSH_KEY_PASSPHRASE)\r"
